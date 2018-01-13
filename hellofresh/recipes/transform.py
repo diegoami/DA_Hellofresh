@@ -1,21 +1,3 @@
-import pyspark
-from pyspark import SparkContext, SQLContext
-from pyspark.ml.feature import Tokenizer, RegexTokenizer
-from pyspark.sql.functions import col, udf, lower
-
-sc = pyspark.SparkContext('local[*]')
-sqlc = SQLContext(sc)
-recipes = sqlc.read.json("data/recipes.json")
-recipes = recipes.withColumn("ingredients_lower", lower(col("ingredients")))
-tokenizer = Tokenizer(inputCol="ingredients_lower", outputCol="tok_ingredients")
-recipes = tokenizer.transform(recipes)
-regexTokenizer = RegexTokenizer(inputCol="ingredients_lower", outputCol="reg_tok_ingredients", pattern="\\W")
-recipes = regexTokenizer.transform(recipes)
-countTokens = udf(lambda words: len(words))
-recipes = recipes.withColumn("cnt_tok", countTokens(col("reg_tok_ingredients")))
-
-
-
 def has_chili(tok_ings):
     def one_change(first, second):
         if first == second:
@@ -55,18 +37,20 @@ def total_time(cook_time, prep_time):
             if "M" in ptime_str:
                 tot_amount += int(ptime_str[:ptime_str.index("M")])
             return tot_amount
-
+        else:
+            return None
     ckm, ptm  = get_minutes(cook_time), get_minutes(prep_time)
 
-    return ckm + ptm
+    return ( ckm + ptm ) if ckm is not None and ptm is not None else None
 
-has_chili_udf = udf(has_chili)
-recipes = recipes.withColumn("has_chili", has_chili_udf(col("reg_tok_ingredients")))
-print(recipes.take(5))
+def difficulty(total_time):
+    if total_time is None:
+        return "Unknown"
+    elif int(total_time) < 30:
+        return "Easy"
+    elif int(total_time) < 60:
+        return "Medium"
+    else:
+        return "Hard"
 
-chili = recipes.filter("has_chili = 'true'")
-print(chili.take(5))
 
-total_time_udf = udf(total_time)
-chili = chili.withColumn("total_time", total_time_udf(col("cookTime"), col("prepTime")) )
-print(chili.take(5))

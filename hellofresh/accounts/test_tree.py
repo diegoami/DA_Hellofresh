@@ -13,6 +13,35 @@ links_ordinary = [
     Link("account5", "account6"),
 ]
 
+links_second_tree = [
+    Link("R", "D"),
+    Link("R", "US"),
+    Link("R", "UK"),
+    Link("D", "D1"),
+    Link("D1", "D1A"),
+    Link("D1", "D1B"),
+    Link("D1", "D1C"),
+    Link("D", "D2"),
+    Link("D2", "D2A"),
+    Link("D2", "D2B"),
+    Link("D", "D3"),
+    Link("D3", "D3A"),
+    Link("D", "D4"),
+    Link("UK", "UK1"),
+    Link("UK1", "UK1A"),
+    Link("UK1", "UK1B"),
+    Link("UK", "UK2"),
+    Link("UK2", "UK2A"),
+    Link("UK", "UK3"),
+    Link("US", "US1"),
+    Link("US1", "US1A"),
+    Link("US1", "US1B"),
+    Link("US", "US2"),
+    Link("US2", "US2A"),
+    Link("US", "US3"),
+]
+
+
 links_empty_tree = []
 
 links_no_root = [
@@ -58,6 +87,16 @@ class TestParentBelowRoot(unittest.TestCase):
         self.assertEqual(tree.find_parent_below_root("Hellofresh UK"), "Hellofresh UK")
         self.assertEqual(tree.find_parent_below_root("account10"), None)
         self.assertEqual(tree.find_parent_below_root("Root"), None)
+
+
+    def test_second_tree(self):
+        tree = Tree(links_second_tree )
+        self.assertEqual(tree.find_parent_below_root("UK2"),"UK")
+        self.assertEqual(tree.find_parent_below_root("D2B"), "D")
+        self.assertEqual(tree.find_parent_below_root("US1A"), "US")
+        self.assertEqual(tree.find_parent_below_root("US3C"), None)
+        self.assertEqual(tree.find_parent_below_root("DE4B"), None)
+
 
     def test_tree_ordinary_case_insensitive(self):
         tree = Tree(links_ordinary, case_sensitive=False )
