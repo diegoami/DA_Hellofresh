@@ -6,17 +6,6 @@ class Link(object):
         self.parent_name = parent_name
         self.child_name = child_name
 
-links = [
-    Link("Root", "Hellofresh UK"),
-    Link("Root", "Hellofresh US"),
-    Link("Hellofresh UK", "account1"),
-    Link("Hellofresh UK", "account2"),
-    Link("Hellofresh US", "account3"),
-    Link("account3", "account4"),
-    Link("account4", "account5"),
-    Link("account5", "account6"),
-]
-
 
 class Node:
     def __init__(self, name):
@@ -60,9 +49,5 @@ def find_venture(links, node_name):
     return venture
 
 
-
-if __name__ == "__main__":
-    print(find_venture(links, "account5"))
-    print(find_venture(links, "account2"))
 
 
