@@ -14,11 +14,12 @@ links_ordinary = [
 ]
 
 
-class OrdinaryTreeTest(unittest.TestCase):
-    def setup(self):
+class TestOrdinaryTree(unittest.TestCase):
+    def setUp(self):
         self.links = links_ordinary
         self.tree = Tree(self.links)
 
     def test_find_parent_below_root(self):
+
         self.assertEqual(self.tree.find_parent_below_root("account5"),"Hellofresh US")
         self.assertEqual(self.tree.find_parent_below_root("account2"), "Hellofresh UK")
