@@ -1,0 +1,6 @@
+metastore_db/**
+.idea/**
+data/**
+.ipynb_checkpoints/**
+**/__pycache__/****
+
