@@ -3,4 +3,8 @@ metastore_db/**
 data/**
 .ipynb_checkpoints/**
 **/__pycache__/****
+derby.log
+recipes-etl/.idea/
+recipes-etl/metastore_db/
+recipes-etl/test_recipes.parquet/
 

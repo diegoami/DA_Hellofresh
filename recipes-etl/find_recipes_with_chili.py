@@ -1,12 +1,31 @@
+
+
 from pyspark import SparkContext, SQLContext, SparkConf
 from pyspark.ml.feature import RegexTokenizer
 from pyspark.sql.functions import col, udf
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import BooleanType, IntegerType
+from py4j.protocol import Py4JJavaError
+import traceback
+import argparse
+INPUT_FILE = "data/input/recipes.json"
+OUTPUT_DIR = "data/output/"
+OUTPUT_FILE = "chili.parquet"
+OUTPUT_PARQUET = OUTPUT_DIR + OUTPUT_FILE
 
-INPUT_FILE = "data/input/recipes-etl.json"
-OUTPUT_DIR = "data/output/chili"
+CHECK_SAVE = True
 
-def has_chili(tok_ings):
+VERIFY_OUTPUT_JSON = "data/output/recipes_chili.json"
+
+def has_chili(tokens):
+    """ True if any of the tokens in the list is chili, chilies or differs by one character from these words
+
+    Parameters:
+        tokens: a list of tokens from the ingredients
+
+    Returns:
+        True or False, if chili/chilies with at most one spelling error is found
+
+    """
     def one_change(first, second):
         if first == second:
             return True
@@ -29,15 +48,27 @@ def has_chili(tok_ings):
                        return False
             return True
         return False
-    for tok in tok_ings:
+    for tok in tokens:
         tokl = tok.lower()
         if (one_change(tokl, "chili") or one_change(tokl, "chilies") ):
             return True
     return False
 
+
+
 def total_time(cook_time, prep_time):
+    """ Returns the total time of cooking and preparation
+
+    Parameters:
+        cook_time : cooking time in the format PT<hours>H<minutes>M
+        prep_time : preparation time in the format PT<hours>H<minutes>M
+
+    Returns:
+        sum of cooking time and preparation time in minutes, or None if either is invalid or empty
+
+    """
     def get_minutes(str):
-        if str:
+        if str and str[:2] == "PT":
             tot_amount = 0
             ptime_str = str[2:]
             if "H" in ptime_str:
@@ -53,36 +84,75 @@ def total_time(cook_time, prep_time):
     return ( ckm + ptm ) if ckm is not None and ptm is not None else None
 
 def difficulty(total_time):
+    """ difficulty of the recipe based on the total time of preparation
+
+    Parameters:
+        total_time : the total time of preparation of the recipe
+
+    Returns:
+        A string containing Easy, Medium, Hard or Unknown depending on the preparation time
+
+    """
     if total_time is None:
         return "Unknown"
-    elif int(total_time) < 30:
+    elif total_time < 30:
         return "Easy"
-    elif int(total_time) < 60:
+    elif total_time < 60:
         return "Medium"
     else:
         return "Hard"
 
 def filter_by_chili(recipes):
+    """ filter a list of recipes keeping only those having chili as ingredient
+
+    Parameters:
+        recipes: DataFrame containing recipes
+
+    Returns:
+        only the recipes having chili as ingredient
+    """
+
     regexTokenizer = RegexTokenizer(inputCol="ingredients", outputCol="reg_tok_ingredients", pattern="\\W")
     recipes = regexTokenizer.transform(recipes)
     has_chili_udf = udf(has_chili, BooleanType())
     chili_recipes = recipes.filter(has_chili_udf(recipes.reg_tok_ingredients ))
     return chili_recipes
 
+
+
 def add_difficulty(recipes):
-    total_time_udf = udf(total_time)
+    """ adds a column difficulty to a recipes dataframe
+
+    Parameters:
+        recipes: DataFrame containing recipes
+
+    Returns:
+        the dataframe recipes having an additional column "difficulty"
+
+    """
+
+    total_time_udf = udf(total_time, IntegerType())
+    recipes = recipes.withColumn("total_time", total_time_udf(col("cookTime"), col("prepTime")))
     difficulty_udf = udf(difficulty)
-    recipes = recipes.withColumn("difficulty",difficulty_udf(total_time_udf(col("cookTime"), col("prepTime"))))
-    recipes = recipes.drop("reg_tok_ingredients").drop("has_chili")
+    recipes = recipes.withColumn("difficulty", difficulty_udf(col("total_time")))
+    recipes = recipes.drop("reg_tok_ingredients").drop("has_chili").drop("total_time")
     return recipes
 
 def retrieve_recipes_json(sqlc, input_file):
-    return sqlc.read.json(input_file)
+    """ creates a dataframe from a json file"""
+    try:
+        return sqlc.read.json(input_file)
+    except Py4JJavaError as e:
+        traceback.print_exc()
+        print("{} could not be found - please read the instructions.".format(input_file))
 
 def save_recipes_parquet(recipes, output_dir):
+    """ saves a dataframe to a parquet file"""
     recipes.write.parquet(output_dir, mode="overwrite")
 
 if __name__ == "__main__":
+
+
     conf = SparkConf().setAppName("find_chili")
     sc = SparkContext(conf=conf)
     sqlc = SQLContext(sc)
@@ -90,5 +160,7 @@ if __name__ == "__main__":
     recipes = retrieve_recipes_json(sqlc,INPUT_FILE)
     chili_recipes = filter_by_chili(recipes)
     chili_recipes = add_difficulty(chili_recipes)
-    save_recipes_parquet(chili_recipes, OUTPUT_DIR)
-    chili_recipes.write.parquet(OUTPUT_DIR,  mode="overwrite")
+    save_recipes_parquet(chili_recipes, OUTPUT_PARQUET)
+    if CHECK_SAVE:
+        saved_recipes = sqlc.read.parquet(OUTPUT_PARQUET)
+        saved_recipes.write.json(VERIFY_OUTPUT_JSON, mode="overwrite")

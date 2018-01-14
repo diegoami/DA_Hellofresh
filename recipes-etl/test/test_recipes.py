@@ -1,7 +1,8 @@
 from pyspark import SparkContext, SQLContext, SparkConf
 
-from recipes-etl.find_recipes_with_chili import filter_by_chili, add_difficulty, retrieve_recipes_json, save_recipes_parquet
+from find_recipes_with_chili import has_chili, total_time, difficulty
 
+from find_recipes_with_chili import filter_by_chili, add_difficulty, retrieve_recipes_json, save_recipes_parquet
 import unittest
 
 
@@ -25,6 +26,7 @@ class TestRecipesUdfs(unittest.TestCase):
         self.assertIsNone(total_time("", "PT10M"))
         self.assertIsNone(total_time("", ""))
         self.assertIsNone(total_time(None, "PT10M"))
+        self.assertIsNone(total_time("Wrong", "PT10M"))
 
     def test_difficulty(self):
         self.assertEqual(difficulty(40), "Medium")
@@ -36,7 +38,7 @@ class TestRecipesUdfs(unittest.TestCase):
 class TestProcessRecipes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        conf = SparkConf().setAppName("find_chili")
+
         sc = SparkContext('local[*]')
         cls.sqlc = SQLContext(sc)
         cls.recipes = retrieve_recipes_json(cls.sqlc, 'resources/test_recipes.json')
