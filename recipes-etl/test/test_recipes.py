@@ -1,10 +1,6 @@
 from pyspark import SparkContext, SQLContext, SparkConf
 
-from find_recipes_with_chili import has_chili, difficulty, total_time
-from find_recipes_with_chili import filter_by_chili, add_difficulty
-
-import json
-
+from recipes-etl.find_recipes_with_chili import filter_by_chili, add_difficulty, retrieve_recipes_json, save_recipes_parquet
 
 import unittest
 
@@ -42,8 +38,8 @@ class TestProcessRecipes(unittest.TestCase):
     def setUpClass(cls):
         conf = SparkConf().setAppName("find_chili")
         sc = SparkContext('local[*]')
-        sqlc = SQLContext(sc)
-        cls.recipes = sqlc.read.json('resources/test_recipes.json')
+        cls.sqlc = SQLContext(sc)
+        cls.recipes = retrieve_recipes_json(cls.sqlc, 'resources/test_recipes.json')
 
     def test_count_recipes(self):
         self.assertEqual(self.recipes.count(), 6)
@@ -56,7 +52,11 @@ class TestProcessRecipes(unittest.TestCase):
         recipes_difficulty = add_difficulty(self.recipes)
         self.assertEqual(recipes_difficulty.select('difficulty').rdd.flatMap(lambda x: x).collect(), ["Easy", "Easy", "Medium", "Hard", "Hard", "Unknown"])
 
-
+    def test_save_and_load(self):
+        save_recipes_parquet(self.recipes,'test_recipes.parquet')
+        saved_recipes = self.sqlc.read.parquet('test_recipes.parquet')
+        self.assertEqual(saved_recipes.count(), 6)
+        self.assertEqual(saved_recipes.collect(), self.recipes.collect())
 
 
 

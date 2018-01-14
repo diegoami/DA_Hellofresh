@@ -1,9 +1,9 @@
 from pyspark import SparkContext, SQLContext, SparkConf
-from pyspark.ml.feature import Tokenizer, RegexTokenizer
-from pyspark.sql.functions import col, udf, lower
+from pyspark.ml.feature import RegexTokenizer
+from pyspark.sql.functions import col, udf
+from pyspark.sql.types import BooleanType
 
-from hellofresh.recipes.transform import has_chili_2, total_time_2, difficulty_2
-INPUT_FILE = "data/input/recipes.json"
+INPUT_FILE = "data/input/recipes-etl.json"
 OUTPUT_DIR = "data/output/chili"
 
 def has_chili(tok_ings):
@@ -65,35 +65,30 @@ def difficulty(total_time):
 def filter_by_chili(recipes):
     regexTokenizer = RegexTokenizer(inputCol="ingredients", outputCol="reg_tok_ingredients", pattern="\\W")
     recipes = regexTokenizer.transform(recipes)
-    has_chili_udf = udf(has_chili)
-    recipes = recipes.withColumn("has_chili", has_chili_udf(col("reg_tok_ingredients")))
-    chili_recipes = recipes.filter("has_chili = 'true'")
+    has_chili_udf = udf(has_chili, BooleanType())
+    chili_recipes = recipes.filter(has_chili_udf(recipes.reg_tok_ingredients ))
     return chili_recipes
 
 def add_difficulty(recipes):
     total_time_udf = udf(total_time)
-    recipes = recipes.withColumn("total_time", total_time_udf(col("cookTime"), col("prepTime")))
     difficulty_udf = udf(difficulty)
-    recipes = recipes.withColumn("difficulty", difficulty_udf(col("total_time")))
-    recipes = recipes.drop("reg_tok_ingredients").drop("has_chili").drop("total_time")
+    recipes = recipes.withColumn("difficulty",difficulty_udf(total_time_udf(col("cookTime"), col("prepTime"))))
+    recipes = recipes.drop("reg_tok_ingredients").drop("has_chili")
     return recipes
 
-def verify_df(chili_recipes):
-    pass
+def retrieve_recipes_json(sqlc, input_file):
+    return sqlc.read.json(input_file)
 
-def verify_output(output_dir):
-    pass
+def save_recipes_parquet(recipes, output_dir):
+    recipes.write.parquet(output_dir, mode="overwrite")
 
 if __name__ == "__main__":
     conf = SparkConf().setAppName("find_chili")
     sc = SparkContext(conf=conf)
-
     sqlc = SQLContext(sc)
-    recipes = sqlc.read.json(INPUT_FILE)
 
+    recipes = retrieve_recipes_json(sqlc,INPUT_FILE)
     chili_recipes = filter_by_chili(recipes)
     chili_recipes = add_difficulty(chili_recipes)
-
+    save_recipes_parquet(chili_recipes, OUTPUT_DIR)
     chili_recipes.write.parquet(OUTPUT_DIR,  mode="overwrite")
-    chili_recipes_parquet  = sqlc.read.parquet(OUTPUT_DIR)
-    #assert chili_recipes == chili_recipes_parquet

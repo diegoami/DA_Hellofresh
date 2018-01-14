@@ -1,4 +1,4 @@
-from hellofresh.accounts.tree import Link, find_venture
+from ventures_tree import Link, find_venture
 
 links = [
     Link("Root", "Hellofresh UK"),

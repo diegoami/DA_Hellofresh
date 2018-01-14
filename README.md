@@ -1,12 +1,12 @@
 # INSTRUCTIONS
 
-## FIND_VENTURES
+## VENTURES TREE
 
-A class implementing a tree containing ventures and accounts can be found in **hellofresh/account/tree.py**.
+A class implementing a ventures_tree containing ventures and ventures can be found in **hellofresh/account/ventures_tree.py**.
 
 Tests are in **test/test_tree.py**.
 
-**find_ventures** is a function accepting a list of links to create a tree, and the account of which we would like to find the venture.
+**find_ventures** is a function accepting a list of links to create a ventures_tree, and the account of which we would like to find the venture.
 
 A program to test-drive the **find_ventures** function can be found in the file **find_recipes_with_chili.py** in the main directory.
 
@@ -16,7 +16,7 @@ A program to test-drive the **find_ventures** function can be found in the file 
 
 It is assumed that compatible versions of Hadoop, Yarn and Spark have been installed locally on localhost.
 
-To set up the recipes in the HDFS file system execute these commands
+To set up the recipes-etl in the HDFS file system execute these commands
 
 ```bash
 mkdir -p ~/data/input

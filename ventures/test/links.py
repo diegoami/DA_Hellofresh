@@ -1,6 +1,4 @@
-import unittest
-from ventures.ventures_tree import Link, Tree, TreeError
-
+from ventures_tree import Link, Tree, TreeError
 
 links_ordinary = [
     Link("Root", "Hellofresh UK"),
@@ -76,30 +74,3 @@ links_cyclic_tree = [
     Link("Hellofresh UK", "Hellofresh DE"),
 
 ]
-
-
-class TestParentBelowRoot(unittest.TestCase):
-
-    def test_tree_ordinary(self):
-        tree = Tree(links_ordinary)
-        self.assertEqual(tree.find_parent_below_root("account5"),"Hellofresh US")
-        self.assertEqual(tree.find_parent_below_root("account2"), "Hellofresh UK")
-        self.assertEqual(tree.find_parent_below_root("Hellofresh UK"), "Hellofresh UK")
-        self.assertEqual(tree.find_parent_below_root("account10"), None)
-        self.assertEqual(tree.find_parent_below_root("Root"), None)
-
-
-    def test_second_tree(self):
-        tree = Tree(links_second_tree )
-        self.assertEqual(tree.find_parent_below_root("UK2"),"UK")
-        self.assertEqual(tree.find_parent_below_root("D2B"), "D")
-        self.assertEqual(tree.find_parent_below_root("US1A"), "US")
-        self.assertEqual(tree.find_parent_below_root("US3C"), None)
-        self.assertEqual(tree.find_parent_below_root("DE4B"), None)
-
-    def test_invalid_trees(self):
-        self.assertRaises(TreeError, Tree, links_no_root )
-        self.assertRaises(TreeError, Tree, links_empty_tree)
-        self.assertRaises(TreeError, Tree, links_two_parents)
-        self.assertRaises(TreeError, Tree, links_invalid_tree)
-        self.assertRaises(TreeError, Tree, links_cyclic_tree)
