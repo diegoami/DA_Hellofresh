@@ -91,6 +91,7 @@ You can retrieve results from the output directory on hdfs using this command
 ```
 #rm -rf ~/data/output
 hadoop fs -copyToLocal hdfs://localhost:9000/user/$USER/data/output ~/data/
+ls ~/data/output/chili.parquet
 ```
 
 The parquet file is also available in this archive under _output/chili.parquet_
