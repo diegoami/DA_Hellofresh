@@ -23,9 +23,8 @@ class Node:
         node.parent = self
 
 class Tree(object):
-    def __init__(self, links, case_sensitive=True):
+    def __init__(self, links):
 
-        self.case_sensitive = case_sensitive
         self.nodes = {}
         self.create_nodes(links)
         self.root = self.find_root()
@@ -49,8 +48,6 @@ class Tree(object):
             return self.root.children
 
     def find_or_create_node(self, node_name):
-        if not self.case_sensitive:
-            node_name = node_name.lower()
         if not node_name in self.nodes:
             self.nodes[node_name] = Node(node_name)
         return self.nodes[node_name]
@@ -64,8 +61,6 @@ class Tree(object):
             parent_node.add_child(child_node)
 
     def find_parent_below_root(self, node_name):
-        if not self.case_sensitive:
-            node_name = node_name.lower()
         if node_name not in self.nodes:
             return None
         node = self.nodes[node_name]

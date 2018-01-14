@@ -1,11 +1,10 @@
 from pyspark import SparkContext, SQLContext, SparkConf
 from pyspark.ml.feature import Tokenizer, RegexTokenizer
 from pyspark.sql.functions import col, udf, lower
-import json
-import requests
 
-r = requests.get("https://s3-eu-west-1.amazonaws.com/dwh-test-resources/recipes.json")
-
+from hellofresh.recipes.transform import has_chili_2, total_time_2, difficulty_2
+INPUT_FILE = "/data/input/recipes.json"
+OUTPUT_DIR = "/data/output/chili"
 
 def has_chili(tok_ings):
     def one_change(first, second):
@@ -31,7 +30,8 @@ def has_chili(tok_ings):
             return True
         return False
     for tok in tok_ings:
-        if (one_change(tok, "chili") or one_change(tok, "chilies") ):
+        tokl = tok.lower()
+        if (one_change(tokl, "chili") or one_change(tokl, "chilies") ):
             return True
     return False
 
@@ -62,26 +62,38 @@ def difficulty(total_time):
     else:
         return "Hard"
 
+def filter_by_chili(recipes):
+    regexTokenizer = RegexTokenizer(inputCol="ingredients", outputCol="reg_tok_ingredients", pattern="\\W")
+    recipes = regexTokenizer.transform(recipes)
+    has_chili_udf = udf(has_chili)
+    recipes = recipes.withColumn("has_chili", has_chili_udf(col("reg_tok_ingredients")))
+    chili_recipes = recipes.filter("has_chili = 'true'")
+    return chili_recipes
 
-conf = SparkConf().setAppName("find_chili")
-sc = SparkContext(conf=conf)
+def add_difficulty(recipes):
+    total_time_udf = udf(total_time)
+    recipes = recipes.withColumn("total_time", total_time_udf(col("cookTime"), col("prepTime")))
+    difficulty_udf = udf(difficulty)
+    recipes = recipes.withColumn("difficulty", difficulty_udf(col("total_time")))
+    recipes = recipes.drop("reg_tok_ingredients").drop("has_chili").drop("total_time")
+    return recipes
 
-sqlc = SQLContext(sc)
-recipes = sqlc.createDataFrame([json.loads(line) for line in r.iter_lines()])
+def verify_df(chili_recipes):
+    pass
 
+def verify_output(output_dir):
+    pass
 
-recipes = recipes.withColumn("ingredients_lower", lower(col("ingredients")))
-regexTokenizer = RegexTokenizer(inputCol="ingredients_lower", outputCol="reg_tok_ingredients", pattern="\\W")
-recipes = regexTokenizer.transform(recipes)
+if __name__ == "__main__":
+    conf = SparkConf().setAppName("find_chili")
+    sc = SparkContext(conf=conf)
 
-has_chili_udf = udf(has_chili)
-recipes = recipes.withColumn("has_chili", has_chili_udf(col("reg_tok_ingredients")))
-chili = recipes.filter("has_chili = 'true'")
+    sqlc = SQLContext(sc)
+    recipes = sqlc.read.json(INPUT_FILE)
 
-total_time_udf = udf(total_time)
-chili = chili.withColumn("total_time", total_time_udf(col("cookTime"), col("prepTime")) )
+    chili_recipes = filter_by_chili(recipes)
+    chili_recipes = add_difficulty(chili_recipes)
 
-difficulty_udf = udf(difficulty)
-chili = chili.withColumn("difficulty", difficulty_udf(col("total_time")) )
-
-chili.write.parquet("data/parquet/chili_yarn",  mode="overwrite")
+    chili_recipes.write.parquet(OUTPUT_DIR,  mode="overwrite")
+    chili_recipes_parquet  = sqlc.read.parquet(OUTPUT_DIR)
+    assert chili_recipes == chili_recipes_parquet

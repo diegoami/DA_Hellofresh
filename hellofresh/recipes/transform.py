@@ -1,4 +1,4 @@
-def has_chili(tok_ings):
+def has_chili_2(tok_ings):
     def one_change(first, second):
         if first == second:
             return True
@@ -26,7 +26,7 @@ def has_chili(tok_ings):
             return True
     return False
 
-def total_time(cook_time, prep_time):
+def total_time_2(cook_time, prep_time):
     def get_minutes(str):
         if str:
             tot_amount = 0
@@ -43,7 +43,7 @@ def total_time(cook_time, prep_time):
 
     return ( ckm + ptm ) if ckm is not None and ptm is not None else None
 
-def difficulty(total_time):
+def difficulty_2(total_time):
     if total_time is None:
         return "Unknown"
     elif int(total_time) < 30:
