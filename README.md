@@ -12,7 +12,7 @@ A program to test-drive the **find_ventures** function can be found in the file 
 
 ## FIND_RECIPES_WITH_CHILI
 
-### Preparations
+### Preparation
 
 It is assumed that compatible versions of Hadoop, Yarn and Spark have been installed locally on localhost.
 
@@ -23,8 +23,8 @@ mkdir -p ~/data/input
 mkdir -p ~/data/output
 
 wget https://s3-eu-west-1.amazonaws.com/dwh-test-resources/recipes.json -P ~/data/input
-hadoop fs -mkdir hdfs://localhost:9000/data
-hadoop fs -mkdir hdfs://localhost:9000/data/input
-hadoop fs -mkdir hdfs://localhost:9000/data/output
-hadoop fs -copyFromLocal ~/data/recipes.json hdfs://localhost:9000/data/input/recipes.json
+hadoop fs -mkdir hdfs://localhost:9000/user/$USER/data
+hadoop fs -mkdir hdfs://localhost:9000/user/$USER/data/input
+hadoop fs -mkdir hdfs://localhost:9000/user/$USER/data/output
+hadoop fs -copyFromLocal ~/data/recipes.json hdfs://localhost:9000/user/$USER/data/input/recipes.json
 ```

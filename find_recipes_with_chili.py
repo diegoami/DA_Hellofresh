@@ -3,8 +3,8 @@ from pyspark.ml.feature import Tokenizer, RegexTokenizer
 from pyspark.sql.functions import col, udf, lower
 
 from hellofresh.recipes.transform import has_chili_2, total_time_2, difficulty_2
-INPUT_FILE = "/data/input/recipes.json"
-OUTPUT_DIR = "/data/output/chili"
+INPUT_FILE = "data/input/recipes.json"
+OUTPUT_DIR = "data/output/chili"
 
 def has_chili(tok_ings):
     def one_change(first, second):
@@ -96,4 +96,4 @@ if __name__ == "__main__":
 
     chili_recipes.write.parquet(OUTPUT_DIR,  mode="overwrite")
     chili_recipes_parquet  = sqlc.read.parquet(OUTPUT_DIR)
-    assert chili_recipes == chili_recipes_parquet
+    #assert chili_recipes == chili_recipes_parquet
