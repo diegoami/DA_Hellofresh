@@ -91,6 +91,7 @@ spark-submit --master yarn-client --queue default     --num-executors 2 --execut
 
 You can retrieve results from the output directory on hdfs using these commands
 
+Script _retrieve_results.sh_
 
 ```
 #rm -rf ~/data/recipes/output
@@ -111,7 +112,7 @@ To clean up the HDFS execute
 
 ## UNIT TESTS
 
-Tests can be executed from this directory
+Script _execute_tests.sh_
 
 ```
 python -m unittest test/test_recipes.py
