@@ -46,7 +46,8 @@ export PYTHONPATH=$SPARK_HOME/python/lib/py4j-0.9-src.zip:$PYTHONPATH
 
 ## PREPARATION
 
-Start Hadoop and Yarn on localhost with _$HADOOP_HOME/sbin/start-all.sh_ and copy the recipes into HDFS .
+Start Hadoop and Yarn on localhost with _$HADOOP_HOME/sbin/start-all.sh_ and copy the recipes into HDF.
+Script _prepare.sh_
 
 ```bash
 mkdir -p ~/data/recipes/input
@@ -67,7 +68,7 @@ hadoop fs -ls hdfs://localhost:9000/user/$USER/data/recipes/input/recipes.json
 
 ## EXECUTION STANDALONE
 
-
+Script _find_recipes_with_chili_standalone.sh_
 ```
 spark-submit find_recipes_with_chili.py
 ```
@@ -79,6 +80,8 @@ The parquet file is saved to _hdfs://localhost:9000/user/$USER/data/output/chili
 
 It might be necessary to set _yarn.nodemanager.vmem-check-enabled_ to _False_ in *yarn_site.xml*
 
+Script _find_recipes_with_chili_yarn.sh_
+
 ```
 spark-submit --master yarn-client --queue default     --num-executors 2 --executor-memory 512M --executor-cores 2     --driver-memory 512M find_recipes_with_chili.py
 ```
@@ -86,11 +89,15 @@ spark-submit --master yarn-client --queue default     --num-executors 2 --execut
 
 ### RETRIEVE RESULT
 
-You can retrieve results from the output directory on hdfs using this command
+You can retrieve results from the output directory on hdfs using these commands
+
 
 ```
 #rm -rf ~/data/recipes/output
 hadoop fs -copyToLocal hdfs://localhost:9000/user/$USER/data/recipes/output ~/data/recipes
+#rm -rf output
+hadoop fs -copyToLocal hdfs://localhost:9000/user/$USER/data/recipes/output .
+
 ls ~/data/recipes/output/chili.parquet
 ```
 
