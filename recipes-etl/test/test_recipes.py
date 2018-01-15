@@ -5,6 +5,7 @@ from find_recipes_with_chili import has_chili, total_time, difficulty
 from find_recipes_with_chili import filter_by_chili, add_difficulty, retrieve_recipes_json, save_recipes_parquet
 import unittest
 
+import os
 
 
 
@@ -41,7 +42,8 @@ class TestProcessRecipes(unittest.TestCase):
 
         sc = SparkContext('local[*]')
         cls.sqlc = SQLContext(sc)
-        cls.recipes = retrieve_recipes_json(cls.sqlc, 'resources/test_recipes.json')
+        recipes_full_path = os.path.dirname(os.path.realpath('resources/test_recipes.json'))
+        cls.recipes = retrieve_recipes_json(cls.sqlc, 'file://'+recipes_full_path)
 
     def test_count_recipes(self):
         self.assertEqual(self.recipes.count(), 6)

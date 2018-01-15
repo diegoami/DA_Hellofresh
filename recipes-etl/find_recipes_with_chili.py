@@ -7,8 +7,8 @@ from pyspark.sql.types import BooleanType, IntegerType
 from py4j.protocol import Py4JJavaError
 import traceback
 import argparse
-INPUT_FILE = "data/input/recipes.json"
-OUTPUT_DIR = "data/output/"
+INPUT_FILE = "data/recipes/input/recipes.json"
+OUTPUT_DIR = "data/recipes/output/"
 OUTPUT_FILE = "chili.parquet"
 OUTPUT_PARQUET = OUTPUT_DIR + OUTPUT_FILE
 
