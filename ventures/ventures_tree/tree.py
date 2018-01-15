@@ -1,6 +1,6 @@
 
 class Link(object):
-    """ a link in the ventures tree, representing a parent child relation between two entities"""
+    """ a link representing a parent child relation between two entities"""
     def __init__(self, parent_name, child_name):
         self.parent_name = parent_name
         self.child_name = child_name
@@ -16,7 +16,7 @@ class TreeError(Exception):
 
 
 class Node:
-    """A node in the ventures tree"""
+    """A node in a tree"""
 
     def __init__(self, name):
         self.name = name

@@ -7,4 +7,4 @@ derby.log
 recipes-etl/.idea/
 recipes-etl/metastore_db/
 recipes-etl/test_recipes.parquet/
-
+ventures/.idea/**
